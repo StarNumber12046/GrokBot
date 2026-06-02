@@ -13,9 +13,13 @@
 	},
 	"dependencies": {
 		"@ai-sdk/anthropic": "^3.0.81",
+		"@ai-sdk/cerebras": "^2.0.54",
+		"@ai-sdk/groq": "^3.0.39",
 		"@ai-sdk/openai": "^3.0.67",
-		"@ai-sdk/openai-compatible": "^2.0.48",
+		"@ai-sdk/provider": "^3.0.10",
+		"@ai-sdk/xai": "^3.0.93",
 		"@discordjs/core": "^2.3.0",
+		"@openrouter/ai-sdk-provider": "^2.9.0",
 		"@upstash/redis": "^1.38.0",
 		"ai": "^6.0.193",
 		"discord.js": "^14.24.0"

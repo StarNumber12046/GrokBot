@@ -1,7 +1,11 @@
-import { createOpenAICompatible } from '@ai-sdk/openai-compatible';
 import { createAnthropic } from '@ai-sdk/anthropic';
 import { createOpenAI } from '@ai-sdk/openai';
+import { createGroq } from '@ai-sdk/groq';
+import { createXai } from '@ai-sdk/xai';
+import { createCerebras } from '@ai-sdk/cerebras';
+import { createOpenRouter } from '@openrouter/ai-sdk-provider';
 import type { LanguageModel } from 'ai';
+import type { JSONObject } from '@ai-sdk/provider';
 
 export type ProviderId = 'openai' | 'anthropic' | 'groq' | 'cerebras' | 'xai' | 'openrouter';
 
@@ -32,13 +36,13 @@ export function createProvider(provider: ProviderId, apiKey: string) {
 		case 'anthropic':
 			return createAnthropic({ apiKey });
 		case 'groq':
-			return createOpenAICompatible({ name: 'groq', baseURL: 'https://api.groq.com/openai/v1', apiKey });
+			return createGroq({ apiKey });
 		case 'cerebras':
-			return createOpenAICompatible({ name: 'cerebras', baseURL: 'https://api.cerebras.ai/v1', apiKey });
+			return createCerebras({ apiKey });
 		case 'xai':
-			return createOpenAICompatible({ name: 'xai', baseURL: 'https://api.x.ai/v1', apiKey });
+			return createXai({ apiKey });
 		case 'openrouter':
-			return createOpenAICompatible({ name: 'openrouter', baseURL: 'https://openrouter.ai/api/v1', apiKey });
+			return createOpenRouter({ apiKey });
 	}
 }
 
@@ -46,4 +50,15 @@ export function createModel(provider: ProviderId, apiKey: string, modelName?: st
 	const prov = createProvider(provider, apiKey);
 	const model = modelName ?? getDefaultModel(provider);
 	return prov(model);
+}
+
+export function getWebSearchOptions(provider: ProviderId): Record<string, JSONObject> | undefined {
+	if (provider !== 'openrouter') {
+		return undefined;
+	}
+	return {
+		openrouter: {
+			plugins: [{ id: 'web', max_results: 5 }],
+		},
+	};
 }
