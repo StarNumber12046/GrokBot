@@ -1,6 +1,6 @@
 import { ApplicationCommandType, type MessageContextMenuCommandInteraction } from 'discord.js';
 import { generateText } from 'ai';
-import { getUserApiKey, getUserModel, getUserProvider } from '../../util/redis.js';
+import { getUserApiKey, getUserEndpoint, getUserModel, getUserProvider } from '../../util/redis.js';
 import { createModel, getDefaultModel, getWebSearchOptions, type ProviderId } from '../../util/providers.js';
 import type { Command } from '../index.js';
 
@@ -36,15 +36,17 @@ export default {
 		await interaction.deferReply();
 
 		try {
-			const [userProvider, userModel] = await Promise.all([
+			const [userProvider, userModel, userEndpoint] = await Promise.all([
 				getUserProvider(interaction.user.id),
 				getUserModel(interaction.user.id),
+				getUserEndpoint(interaction.user.id),
 			]);
 			const provider: ProviderId = userProvider ?? 'openrouter';
 			const modelName = userModel ?? getDefaultModel(provider);
+			const baseURL = provider === 'custom' && userEndpoint ? userEndpoint : undefined;
 
 			const { text } = await generateText({
-				model: createModel(provider, userApiKey, modelName),
+				model: createModel(provider, userApiKey, modelName, baseURL),
 				system:
 					"You are a fact-checking assistant. Analyze the user's claim for accuracy. Point out any inaccuracies, provide context, cite sources if possible, and rate the overall accuracy. Keep answers concise and use Discord-compatible markdown without headings or tables.",
 				prompt: `Fact check this claim:\n\n${content}`,

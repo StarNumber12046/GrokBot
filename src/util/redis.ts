@@ -19,6 +19,10 @@ function userProviderKey(userId: string): string {
 	return `provider:${userId}`;
 }
 
+function userEndpointKey(userId: string): string {
+	return `endpoint:${userId}`;
+}
+
 export async function getUserApiKey(userId: string): Promise<string | null> {
 	return redis.get<string>(userKeyKey(userId));
 }
@@ -41,4 +45,12 @@ export async function getUserProvider(userId: string): Promise<ProviderId | null
 
 export async function setUserProvider(userId: string, provider: ProviderId): Promise<void> {
 	await redis.set(userProviderKey(userId), provider);
+}
+
+export async function getUserEndpoint(userId: string): Promise<string | null> {
+	return redis.get<string>(userEndpointKey(userId));
+}
+
+export async function setUserEndpoint(userId: string, endpoint: string): Promise<void> {
+	await redis.set(userEndpointKey(userId), endpoint);
 }

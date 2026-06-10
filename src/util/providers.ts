@@ -7,7 +7,7 @@ import { createOpenRouter } from '@openrouter/ai-sdk-provider';
 import type { LanguageModel } from 'ai';
 import type { JSONObject } from '@ai-sdk/provider';
 
-export type ProviderId = 'openai' | 'anthropic' | 'groq' | 'cerebras' | 'xai' | 'openrouter';
+export type ProviderId = 'openai' | 'anthropic' | 'groq' | 'cerebras' | 'xai' | 'openrouter' | 'custom';
 
 export type ProviderInfo = {
 	id: ProviderId;
@@ -22,6 +22,7 @@ export const PROVIDERS: ProviderInfo[] = [
 	{ id: 'cerebras', label: 'Cerebras', defaultModel: 'llama-3.3-70b' },
 	{ id: 'xai', label: 'xAI', defaultModel: 'grok-2-1212' },
 	{ id: 'openrouter', label: 'OpenRouter', defaultModel: 'openai/gpt-4o-mini' },
+	{ id: 'custom', label: 'Custom OpenAI-Compatible', defaultModel: 'gpt-4o-mini' },
 ];
 
 export function getDefaultModel(provider: ProviderId): string {
@@ -29,7 +30,7 @@ export function getDefaultModel(provider: ProviderId): string {
 	return info?.defaultModel ?? 'openai/gpt-4o-mini';
 }
 
-export function createProvider(provider: ProviderId, apiKey: string) {
+export function createProvider(provider: ProviderId, apiKey: string, baseURL?: string) {
 	switch (provider) {
 		case 'openai':
 			return createOpenAI({ apiKey });
@@ -43,11 +44,13 @@ export function createProvider(provider: ProviderId, apiKey: string) {
 			return createXai({ apiKey });
 		case 'openrouter':
 			return createOpenRouter({ apiKey });
+		case 'custom':
+			return createOpenAI({ apiKey, baseURL });
 	}
 }
 
-export function createModel(provider: ProviderId, apiKey: string, modelName?: string): LanguageModel {
-	const prov = createProvider(provider, apiKey);
+export function createModel(provider: ProviderId, apiKey: string, modelName?: string, baseURL?: string): LanguageModel {
+	const prov = createProvider(provider, apiKey, baseURL);
 	const model = modelName ?? getDefaultModel(provider);
 	return prov(model);
 }
