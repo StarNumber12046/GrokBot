@@ -1,7 +1,7 @@
 import { ApplicationCommandOptionType, type ChatInputCommandInteraction } from 'discord.js';
 import { generateText } from 'ai';
-import { getUserApiKey, getUserEndpoint, getUserModel, getUserProvider } from '../../util/redis.js';
-import { createModel, getDefaultModel, getWebSearchOptions, type ProviderId } from '../../util/providers.js';
+import { getUserApiKey, getUserEndpoint, getUserModel, getUserProvider, getUserSearch } from '../../util/redis.js';
+import { createModel, getDefaultModel, getSearchConfig, resolveSearchMode, type ProviderId } from '../../util/providers.js';
 import type { Command } from '../index.js';
 
 export default {
@@ -35,21 +35,24 @@ export default {
 		await interaction.deferReply();
 
 		try {
-			const [userProvider, userModel, userEndpoint] = await Promise.all([
+			const [userProvider, userModel, userEndpoint, userSearch] = await Promise.all([
 				getUserProvider(interaction.user.id),
 				getUserModel(interaction.user.id),
 				getUserEndpoint(interaction.user.id),
+				getUserSearch(interaction.user.id),
 			]);
 			const provider: ProviderId = userProvider ?? 'openrouter';
 			const modelName = userModel ?? getDefaultModel(provider);
 			const baseURL = provider === 'custom' && userEndpoint ? userEndpoint : undefined;
+			const searchMode = resolveSearchMode(userSearch, provider);
+			const searchConfig = getSearchConfig(searchMode, provider);
 
 			const { text } = await generateText({
 				model: createModel(provider, userApiKey, modelName, baseURL),
 				system:
 					'You are a helpful assistant. Always keep answers concise. Use Discord-compatible markdown. Do NOT use headings (#, ##, etc.) or tables for any reason. Do not ask follow up questions. NEVER use tables and NEVER ask follow up questions.',
 				prompt,
-				providerOptions: getWebSearchOptions(provider),
+				...searchConfig,
 			});
 			console.log(text);
 			await interaction.editReply(text.slice(0, 2000));

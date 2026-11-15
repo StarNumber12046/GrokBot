@@ -4,8 +4,10 @@ import { createGroq } from '@ai-sdk/groq';
 import { createXai } from '@ai-sdk/xai';
 import { createCerebras } from '@ai-sdk/cerebras';
 import { createOpenRouter } from '@openrouter/ai-sdk-provider';
-import type { LanguageModel } from 'ai';
+import { webSearch } from '@exalabs/ai-sdk';
+import { stepCountIs, type LanguageModel, type ToolSet } from 'ai';
 import type { JSONObject } from '@ai-sdk/provider';
+import type { SearchMode } from './redis.js';
 
 export type ProviderId = 'openai' | 'anthropic' | 'groq' | 'cerebras' | 'xai' | 'openrouter' | 'custom';
 
@@ -55,13 +57,31 @@ export function createModel(provider: ProviderId, apiKey: string, modelName?: st
 	return prov(model);
 }
 
-export function getWebSearchOptions(provider: ProviderId): Record<string, JSONObject> | undefined {
-	if (provider !== 'openrouter') {
-		return undefined;
+export function resolveSearchMode(search: SearchMode | null, provider: ProviderId): SearchMode {
+	if (search) return search;
+	return provider === 'openrouter' ? 'openrouter' : 'off';
+}
+
+export function getSearchConfig(
+	search: SearchMode,
+	provider: ProviderId,
+): { providerOptions?: Record<string, JSONObject>; tools?: ToolSet; stopWhen?: ReturnType<typeof stepCountIs> } {
+	if (search === 'openrouter' && provider === 'openrouter') {
+		return {
+			providerOptions: {
+				openrouter: {
+					plugins: [{ id: 'web', max_results: 5 }],
+				},
+			},
+		};
 	}
-	return {
-		openrouter: {
-			plugins: [{ id: 'web', max_results: 5 }],
-		},
-	};
+
+	if (search === 'exa') {
+		return {
+			tools: { webSearch: webSearch() },
+			stopWhen: stepCountIs(5),
+		};
+	}
+
+	return {};
 }

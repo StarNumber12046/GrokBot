@@ -23,6 +23,12 @@ function userEndpointKey(userId: string): string {
 	return `endpoint:${userId}`;
 }
 
+export type SearchMode = 'off' | 'openrouter' | 'exa';
+
+function userSearchKey(userId: string): string {
+	return `search:${userId}`;
+}
+
 export async function getUserApiKey(userId: string): Promise<string | null> {
 	return redis.get<string>(userKeyKey(userId));
 }
@@ -53,4 +59,12 @@ export async function getUserEndpoint(userId: string): Promise<string | null> {
 
 export async function setUserEndpoint(userId: string, endpoint: string): Promise<void> {
 	await redis.set(userEndpointKey(userId), endpoint);
+}
+
+export async function getUserSearch(userId: string): Promise<SearchMode | null> {
+	return redis.get<SearchMode>(userSearchKey(userId));
+}
+
+export async function setUserSearch(userId: string, search: SearchMode): Promise<void> {
+	await redis.set(userSearchKey(userId), search);
 }

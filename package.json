@@ -19,6 +19,7 @@
 		"@ai-sdk/provider": "^3.0.10",
 		"@ai-sdk/xai": "^3.0.93",
 		"@discordjs/core": "^2.3.0",
+		"@exalabs/ai-sdk": "^2.1.0",
 		"@openrouter/ai-sdk-provider": "^2.9.0",
 		"@upstash/redis": "^1.38.0",
 		"ai": "^6.0.193",

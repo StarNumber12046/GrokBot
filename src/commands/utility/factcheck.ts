@@ -1,7 +1,7 @@
 import { ApplicationCommandType, type MessageContextMenuCommandInteraction } from 'discord.js';
 import { generateText } from 'ai';
-import { getUserApiKey, getUserEndpoint, getUserModel, getUserProvider } from '../../util/redis.js';
-import { createModel, getDefaultModel, getWebSearchOptions, type ProviderId } from '../../util/providers.js';
+import { getUserApiKey, getUserEndpoint, getUserModel, getUserProvider, getUserSearch } from '../../util/redis.js';
+import { createModel, getDefaultModel, getSearchConfig, resolveSearchMode, type ProviderId } from '../../util/providers.js';
 import type { Command } from '../index.js';
 
 export default {
@@ -36,21 +36,24 @@ export default {
 		await interaction.deferReply();
 
 		try {
-			const [userProvider, userModel, userEndpoint] = await Promise.all([
+			const [userProvider, userModel, userEndpoint, userSearch] = await Promise.all([
 				getUserProvider(interaction.user.id),
 				getUserModel(interaction.user.id),
 				getUserEndpoint(interaction.user.id),
+				getUserSearch(interaction.user.id),
 			]);
 			const provider: ProviderId = userProvider ?? 'openrouter';
 			const modelName = userModel ?? getDefaultModel(provider);
 			const baseURL = provider === 'custom' && userEndpoint ? userEndpoint : undefined;
+			const searchMode = resolveSearchMode(userSearch, provider);
+			const searchConfig = getSearchConfig(searchMode, provider);
 
 			const { text } = await generateText({
 				model: createModel(provider, userApiKey, modelName, baseURL),
 				system:
 					"You are a fact-checking assistant. Analyze the user's claim for accuracy. Point out any inaccuracies, provide context, cite sources if possible, and rate the overall accuracy. Keep answers concise and use Discord-compatible markdown without headings or tables.",
 				prompt: `Fact check this claim:\n\n${content}`,
-				providerOptions: getWebSearchOptions(provider),
+				...searchConfig,
 			});
 
 			await interaction.editReply(text.slice(0, 2000));
